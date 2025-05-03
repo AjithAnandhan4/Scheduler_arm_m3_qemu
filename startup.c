@@ -69,5 +69,8 @@ void Reset_Handler(void)
 /* Default Handler */
 void Default_Handler(void)
 {
+    __asm volatile(
+        "BKPT #0\n" // Break into debugger
+      );
     while (1);
 }

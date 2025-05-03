@@ -11,6 +11,9 @@ volatile uint32_t g_var1 = -1;
 volatile uint32_t g_var2 = -1;
 volatile uint32_t g_tick_cntr = 0;
 
+volatile uint32_t spt1 = 0;
+volatile uint32_t spt2 = 0;
+
 uint32_t *task0_sp;
 uint32_t *task1_sp;
 
@@ -36,10 +39,9 @@ void task1(void) {
 // Initialize a task stack with proper alignment
 void init_task_stack(uint32_t **stack_addr, void (*task_func)(void)) {
     uint32_t *sp = *stack_addr + 64; // Point to the end of the stack
-
+    
     // Ensure 8-byte alignment
     sp = (uint32_t*)((uint32_t)sp & ~0x7);
-
     // Reserve space for the initial stack frame (8 registers: R0-R3, R12, LR, PC, xPSR)
     sp -= 8;
 
@@ -64,6 +66,7 @@ void SysTick_Handler(void) {
 
 // PendSV Handler (minimal context switch)
 __attribute__((naked)) void PendSV_Handler(void) {
+    #if 0
     __asm volatile(
         // Get current PSP (points to hardware-saved stack frame)
         "MRS r0, psp\n"
@@ -109,6 +112,7 @@ __attribute__((naked)) void PendSV_Handler(void) {
         "MSR psp, r0\n"
         "BX lr\n"
     );
+    #endif
 }
 
 void init_systick(void) {
@@ -138,10 +142,12 @@ int main(void) {
     __asm volatile(
         "LDR r0, =task0_sp\n"
         "LDR r0, [r0]\n"
-        "MSR psp, r0\n"           // Set PSP to task0 stack
-        "MOVS r0, #2\n"           // CONTROL = 0x2 -> Use PSP, unprivileged mode
+        "MSR psp, r0\n"             // Set PSP to task0 stack
+        "MOVS r0, #2\n"             // CONTROL = 0x2 -> Use PSP, unprivileged mode
         "MSR CONTROL, r0\n"
         "ISB\n"
+        //"MOV LR, #0xFFFFFFFD\n"     // EXC_RETURN to Thread mode
+        //"BX LR"                     // Resume task from fake context
     );
 
     // Trigger PendSV manually to start task switching
