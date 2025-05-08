@@ -1,8 +1,8 @@
 #include <stdint.h>
 
 /* Symbols from linker script */
-extern uint32_t _sStack;
-extern uint32_t _startflashdataaddr, _sdatasram, _edatasram;
+extern uint32_t _estack;
+extern uint32_t _etext, _sdata, _edata;
 extern uint32_t _sbss, _ebss;
 
 /* Forward declarations */
@@ -24,7 +24,7 @@ void SysTick_Handler(void)      __attribute__((weak, alias("Default_Handler")));
 /* Vector table */
 __attribute__((section(".vectors")))
 void (* const vector_table[])(void) = {
-    (void (*)(void))(&_sStack),     // Initial Stack Pointer
+    (void (*)(void))(&_estack),     // Initial Stack Pointer
     Reset_Handler,                  // Reset
     NMI_Handler,                    // NMI
     HardFault_Handler,              // HardFault
@@ -45,9 +45,9 @@ void (* const vector_table[])(void) = {
 void Reset_Handler(void)
 {
     // Copy initialized data from flash to SRAM
-    uint32_t *src = &_startflashdataaddr;
-    uint32_t *dest = &_sdatasram;
-    while (dest < &_edatasram)
+    uint32_t *src = &_etext;
+    uint32_t *dest = &_sdata;
+    while (dest < &_edata)
     {
         *dest++ = *src++;
     }

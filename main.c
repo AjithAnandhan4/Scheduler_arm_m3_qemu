@@ -46,7 +46,7 @@ void init_task_stack(uint32_t **stack_addr, void (*task_func)(void)) {
     sp -= 8;
 
     sp[7] = 0x01000000;         // xPSR (Thumb bit set)
-    sp[6] = (uint32_t)task_func; // PC (Task entry point)
+    sp[6] = ((uint32_t)task_func) | 1; // PC (Task entry point)
     sp[5] = 0xFFFFFFFD;          // LR (return to Thread mode using PSP)
     sp[4] = 0;                   // R12
     sp[3] = 0;                   // R3
@@ -60,7 +60,7 @@ void init_task_stack(uint32_t **stack_addr, void (*task_func)(void)) {
 void SysTick_Handler(void) {
     g_tick_cntr++;
     if (g_tick_cntr % 10 == 0) { // Every 10ms
-        ICSR |= (1 << 28); // Trigger PendSV
+       // ICSR |= (1 << 28); // Trigger PendSV
     }
 }
 
@@ -146,12 +146,12 @@ int main(void) {
         "MOVS r0, #2\n"             // CONTROL = 0x2 -> Use PSP, unprivileged mode
         "MSR CONTROL, r0\n"
         "ISB\n"
-        //"MOV LR, #0xFFFFFFFD\n"     // EXC_RETURN to Thread mode
-        //"BX LR"                     // Resume task from fake context
+        "MOV LR, #0xFFFFFFFD\n"     // EXC_RETURN to Thread mode
+        "BX LR"                     // Resume task from fake context
     );
 
     // Trigger PendSV manually to start task switching
-    ICSR |= (1 << 28);
+    //ICSR |= (1 << 28);
 
     while (1) {
         // Main loop idle
