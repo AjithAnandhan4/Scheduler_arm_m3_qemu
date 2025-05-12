@@ -162,6 +162,8 @@ int main(void) {
         "MSR CONTROL, r0\n"
         "ISB\n"
         "CPSIE i\n"                // Re-enable interrupts
+        "LDR r0, =task0\n"
+        "BX r0\n"                  // Jump to task0
     );
 
     while (1) {
